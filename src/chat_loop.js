@@ -10,7 +10,7 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
-const MAX_TOOL_ITERATIONS = 10; // Prevent infinite loops
+const MAX_TOOL_ITERATIONS = 70; // Prevent infinite loops
 
 export async function startChat(projectPath, model, braveMode) {
   console.log(chalk.cyanBright.bold("===== Autonomous CLI Assistant ====="));
