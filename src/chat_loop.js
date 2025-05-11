@@ -1,9 +1,11 @@
 // src/chat_loop.js
 import readline from "readline/promises";
 import chalk from "chalk";
+
 import { sendMessage, extractToolCalls } from "./llm_interface.js";
 import { getSystemPrompt } from "./system_prompt.js";
 import { ToolExecutor } from "./tool_executor.js";
+import { CommandProcessor } from "./command_processor.js";
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -13,6 +15,9 @@ const rl = readline.createInterface({
 const MAX_TOOL_ITERATIONS = 70; // Prevent infinite loops
 
 export async function startChat(projectPath, model, braveMode) {
+  const commandProcessor = new CommandProcessor(); // Uses default commands.json path
+  await commandProcessor.loadCommands();
+
   console.log(chalk.cyanBright.bold("===== Autonomous CLI Assistant ====="));
   console.log(chalk.gray(`Project Path: ${projectPath}`));
   console.log(chalk.gray(`LLM Model: ${model}`));
@@ -29,6 +34,7 @@ export async function startChat(projectPath, model, braveMode) {
     );
   }
   console.log(chalk.blue("\nType 'exit' or 'quit' to end the session."));
+  console.log(chalk.blue("Type '/help' to see available commands."));
   console.log(
     chalk.blue(
       "Ask for help with your project, e.g., 'Read the main app file' or 'Refactor the User class to include an email field and update tests.'"
@@ -48,7 +54,23 @@ export async function startChat(projectPath, model, braveMode) {
       break;
     }
 
-    messages.push({ role: "user", content: userInput });
+    const commandResult = commandProcessor.processInput(userInput);
+    let effectiveInput = userInput; // Default to original input
+
+    if (commandResult.type === "client_handled") {
+      // e.g., /help was handled, display a new prompt
+      continue;
+    } else if (commandResult.type === "llm_prompt") {
+      effectiveInput = commandResult.content;
+    } else if (commandResult.type === "unknown_command") {
+      // Let the LLM try to figure out the unknown command or user's intent
+      effectiveInput = userInput;
+      // Optionally, you could add a message to the LLM like:
+      // effectiveInput = `User tried command '${commandResult.commandName}' which is unknown. Original input: ${userInput}`;
+    }
+    // If commandResult.type === "no_command", effectiveInput remains userInput
+
+    messages.push({ role: "user", content: effectiveInput });
 
     let iterationCount = 0;
     // eslint-disable-next-line no-constant-condition
@@ -63,7 +85,6 @@ export async function startChat(projectPath, model, braveMode) {
           content:
             "TOOL_EXECUTION_ERROR: Max tool iterations reached. Please summarize your current state or ask the user for guidance.",
         });
-        // Force a final response from LLM without further tool calls
       }
       iterationCount++;
 
@@ -78,12 +99,11 @@ export async function startChat(projectPath, model, braveMode) {
 
       if (llmResponse.error) {
         console.error(chalk.redBright("Assistant Error:"), llmResponse.content);
-        // Potentially break or allow user to retry? For now, just show error and wait for next user input.
-        messages.push(llmResponse); // Add error response to history
-        break; // Break inner loop, go to next user input
+        messages.push(llmResponse);
+        break;
       }
 
-      messages.push(llmResponse); // Add assistant's raw response to history
+      messages.push(llmResponse);
 
       const { toolCalls, textOnlyResponse } = extractToolCalls(
         llmResponse.content
@@ -94,7 +114,7 @@ export async function startChat(projectPath, model, braveMode) {
       }
 
       if (toolCalls.length === 0) {
-        break; // No tools to call, assistant's turn is over, wait for user.
+        break;
       }
 
       const toolResponses = [];
@@ -103,9 +123,8 @@ export async function startChat(projectPath, model, braveMode) {
         toolResponses.push(result);
       }
 
-      // Provide tool execution results back to the LLM
       const toolResultsMessage = {
-        role: "user", // Or 'tool' if your API supports it. 'user' is common.
+        role: "user",
         content: JSON.stringify({ tool_responses: toolResponses }),
       };
       messages.push(toolResultsMessage);
@@ -114,7 +133,6 @@ export async function startChat(projectPath, model, braveMode) {
           "\n📬 Sent tool results back to LLM. Waiting for next action..."
         )
       );
-      // Continue the loop to get LLM's response based on tool results
     }
   }
 

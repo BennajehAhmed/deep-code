@@ -34,7 +34,7 @@ export const sendMessage = async (messages, model) => {
         model: model,
         messages: messages,
         stream: false,
-        temperature: 0.5,
+        temperature: 0.5, // Adjusted temperature for potentially more structured command outputs
       }),
     });
 
@@ -103,7 +103,6 @@ export const extractToolCalls = (responseText) => {
           ),
           jsonContent
         );
-        // Optionally, provide this malformed call back to LLM as an error
         toolCalls.push({
           error: "Malformed tool call: missing name or parameters.",
           raw_content: jsonContent,
@@ -117,14 +116,12 @@ export const extractToolCalls = (responseText) => {
         match[1].trim(),
         error.message
       );
-      // Optionally, provide this error back to LLM
       toolCalls.push({
         error: `Invalid JSON in tool_call: ${error.message}`,
         raw_content: match[1].trim(),
       });
     }
   }
-  // Extract text part of the response, excluding tool calls
   const textOnlyResponse = responseText.replace(regex, "").trim();
   return { toolCalls, textOnlyResponse };
 };

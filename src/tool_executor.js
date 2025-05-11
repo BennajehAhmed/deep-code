@@ -91,11 +91,11 @@ export class ToolExecutor {
         console.log(chalk.blue("   Output (details):"), result.output);
       } else if (
         typeof result.output === "string" &&
-        result.output.length > 100
+        result.output.length > 200 // Increased preview limit slightly
       ) {
         console.log(
           chalk.blue("   Output (preview):"),
-          result.output.substring(0, 100) + "..."
+          result.output.substring(0, 200) + "..."
         );
       } else {
         console.log(chalk.blue("   Output:"), result.output);
@@ -106,7 +106,7 @@ export class ToolExecutor {
       return {
         tool_name: toolName,
         parameters: toolParams,
-        status: "error", // or 'skipped' if your LLM understands that
+        status: "error",
         output: "User denied tool execution.",
       };
     }

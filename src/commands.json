@@ -1,0 +1,21 @@
+{
+  "plan-feature": {
+    "description": "Creates a plan for a new feature, saves it to 'plan.txt', and then guides the execution. Usage: /plan-feature <feature description>",
+    "prompt_template": "You were tasked of implementing the following feature {{args}}. Your task is to: 1. Create a detailed step-by-step plan for implementing this feature. 2. Write this plan to a file named 'plan.txt' in the project root using the 'Write' tool. 3. After successfully writing the plan, inform the user that the plan is saved. 4. Then, confirm with the user if they want to proceed with executing the first step of the plan. If they confirm, proceed to execute the first step. Follow all directives, especially the 'Intern++ Mandate', for the entire process.",
+    "arg_placeholder": "{{args}}"
+  },
+  "analyse-project": {
+    "description": "Performs an analysis of the current project structure, main files, and potential technologies. Usage: /analyse-project",
+    "prompt_template": "The user has invoked the 'analyse-project' command. Your task is to provide a comprehensive analysis of the current project. Please perform the following steps:\n1. Use the `Tree` tool (e.g., with depth 3, and default ignores) to get an overview of the project structure. Also consider using `LS` for the root directory if `Tree` is too verbose initially.\n2. Based on the tool outputs and common project conventions, identify potential main source directories (e.g., 'src', 'app', 'lib', 'components', 'pages'), test directories (e.g., 'tests', 'specs', '__tests__'), and key configuration files (e.g., 'package.json', 'pyproject.toml', 'Gemfile', 'pom.xml', 'vite.config.js', 'next.config.js', 'webpack.config.js', 'tsconfig.json', '.env.example', 'Dockerfile', 'docker-compose.yml').\n3. Use the `Read` tool to examine the content of a few (2-3) key identified files (like 'package.json', 'README.md', and any main application entry point if easily identifiable e.g., 'src/main.js', 'src/index.js', 'app/app.py', 'cmd/main.go') to understand dependencies, stated purpose, and potential entry points.\n4. Synthesize this information and summarize your findings for the user. Your summary should include:\n    a. The likely purpose or type of the project (e.g., web application, library, CLI tool, data processing pipeline).\n    b. The main programming language(s) and any obvious frameworks or major libraries used (mention versions if easily found in config files).\n    c. A brief overview of the directory structure and the perceived role of key folders.\n    d. Any other significant observations, such as build scripts, test commands, or how the project might be run.\nPresent this summary clearly and concisely. Do not make any file modifications during this analysis task. You are only observing and reporting.",
+    "arg_placeholder": null
+  },
+  "greet": {
+    "description": "A simple greeting command. Usage: /greet <name>",
+    "prompt_template": "The user used the greet command for '{{args}}'. Please respond with a friendly greeting.",
+    "arg_placeholder": "{{args}}"
+  },
+  "help": {
+    "description": "Displays available commands and their descriptions.",
+    "type": "client_side_handler"
+  }
+}

@@ -3,6 +3,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import path from "path";
+import chalk from "chalk"; // Added for colored error message
 import { startChat } from "./chat_loop.js";
 import { config } from "dotenv";
 
@@ -36,6 +37,7 @@ const argv = yargs(hideBin(process.argv))
 if (!process.env.CHUTES_API_KEY) {
   console.error(
     chalk.redBright(
+      // chalk was missing here
       "🚨 Chutes API token not found. Set CHUTES_API_KEY environment variable or use the -k flag (if supported by sendMessage)."
     )
   );
