@@ -37,7 +37,6 @@ const argv = yargs(hideBin(process.argv))
 if (!process.env.CHUTES_API_KEY) {
   console.error(
     chalk.redBright(
-      // chalk was missing here
       "🚨 Chutes API token not found. Set CHUTES_API_KEY environment variable or use the -k flag (if supported by sendMessage)."
     )
   );
