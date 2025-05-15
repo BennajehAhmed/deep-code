@@ -14,6 +14,24 @@ const rl = readline.createInterface({
 
 const MAX_TOOL_ITERATIONS = 70; // Prevent infinite loops
 
+/**
+ * Removes <think>...</think> blocks from a string.
+ * These blocks are used by the LLM for its thought process but are not
+ * meant for the user or for the history.
+ * @param {string | null | undefined} text The text to process.
+ * @returns {string} The text with thinking blocks removed.
+ */
+function removeThinkingBlocks(text) {
+  if (!text || typeof text !== "string") {
+    return text || ""; // Return empty string if text is null/undefined
+  }
+  // Regex to match <think>...</think> blocks, including multiline content
+  // and the tags themselves. It also removes an optional newline character
+  // that might immediately follow a closing </think> tag.
+  const regex = /<think>[\s\S]*?<\/think>\n?/g;
+  return text.replace(regex, "").trim();
+}
+
 export async function startChat(projectPath, model, braveMode) {
   const commandProcessor = new CommandProcessor(); // Uses default commands.json path
   await commandProcessor.loadCommands();
@@ -99,21 +117,31 @@ export async function startChat(projectPath, model, braveMode) {
 
       if (llmResponse.error) {
         console.error(chalk.redBright("Assistant Error:"), llmResponse.content);
-        messages.push(llmResponse);
-        break;
+        messages.push(llmResponse); // Push original error response to history
+        break; // Break from the inner tool loop, back to user prompt
       }
 
-      messages.push(llmResponse);
+      // Remove thinking blocks from the LLM's response content.
+      // The llmResponse object's content property is modified in place.
+      // This ensures the cleaned content is used for history, tool extraction, and display.
+      llmResponse.content = removeThinkingBlocks(llmResponse.content);
 
+      messages.push(llmResponse); // Add the LLM response (with cleaned content) to the history
+
+      // Extract tool calls and text-only response from the *cleaned* content
       const { toolCalls, textOnlyResponse } = extractToolCalls(
         llmResponse.content
       );
 
-      if (textOnlyResponse) {
-        console.log(chalk.cyan(`\n🤖 Assistant: ${textOnlyResponse}`));
+      // Display the text-only part of the response (which is now cleaned)
+      // Only display if there's actual text content after cleaning and tool extraction.
+      const assistantDisplayResponse = textOnlyResponse.trim();
+      if (assistantDisplayResponse) {
+        console.log(chalk.cyan(`\n🤖 Assistant: ${assistantDisplayResponse}`));
       }
 
       if (toolCalls.length === 0) {
+        // If no tool calls, and text (if any) has been displayed, break from tool loop
         break;
       }
 
@@ -124,7 +152,7 @@ export async function startChat(projectPath, model, braveMode) {
       }
 
       const toolResultsMessage = {
-        role: "user",
+        role: "user", // Or "tool" if your LLM API supports it and you prefer
         content: JSON.stringify({ tool_responses: toolResponses }),
       };
       messages.push(toolResultsMessage);
