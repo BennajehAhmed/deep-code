@@ -13,20 +13,32 @@ const DEFAULT_IGNORE_PATTERNS = [
 ];
 
 export const execute = async (params, projectPath) => {
-  const { pattern } = params;
+  const { pattern, ignore: userIgnorePatterns } = params; // Destructure userIgnorePatterns
   if (!pattern) {
     return {
       status: "error",
       output: 'Glob tool error: "pattern" parameter is required.',
     };
   }
+
+  let combinedIgnorePatterns = [...DEFAULT_IGNORE_PATTERNS];
+
+  // Merge user-provided ignore patterns with defaults, ensuring no duplicates
+  if (Array.isArray(userIgnorePatterns) && userIgnorePatterns.length > 0) {
+    const uniqueIgnores = new Set([
+      ...DEFAULT_IGNORE_PATTERNS,
+      ...userIgnorePatterns,
+    ]);
+    combinedIgnorePatterns = [...uniqueIgnores];
+  }
+
   try {
     const files = await glob(pattern, {
       cwd: projectPath,
-      dot: true,
-      nodir: false,
-      ignore: DEFAULT_IGNORE_PATTERNS,
-    }); // nodir: false to include directories
+      dot: true, // Include dotfiles (e.g., .env, .eslintrc)
+      nodir: false, // Allows matching directories as well as files. You might need to filter results or use LS if you only want files from a matched directory.
+      ignore: combinedIgnorePatterns, // Use combined ignore patterns
+    });
     return { status: "success", output: files };
   } catch (error) {
     return { status: "error", output: `Glob error: ${error.message}` };
