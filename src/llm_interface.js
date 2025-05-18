@@ -1,9 +1,8 @@
-// src/llm_interface.js
 import chalk from "chalk";
 import fetch from "node-fetch";
 import { config } from "dotenv";
 
-config(); // Load .env variables
+config();
 
 const apiToken = process.env.CHUTES_API_KEY;
 
@@ -34,7 +33,7 @@ export const sendMessage = async (messages, model) => {
         model: model,
         messages: messages,
         stream: false,
-        temperature: 0.5, // Adjusted temperature for potentially more structured command outputs
+        temperature: 0.5,
       }),
     });
 
@@ -43,7 +42,6 @@ export const sendMessage = async (messages, model) => {
       try {
         errorData = await response.json();
       } catch (e) {
-        // If response is not JSON, use status text
         errorData = {
           error: { message: `HTTP ${response.status} ${response.statusText}` },
         };
@@ -74,7 +72,7 @@ export const sendMessage = async (messages, model) => {
         error: true,
       };
     }
-    return data.choices[0].message; // This is { role: 'assistant', content: '...' }
+    return data.choices[0].message;
   } catch (error) {
     console.error(
       chalk.redBright("🚨 Error sending message to LLM:"),
@@ -90,6 +88,13 @@ export const sendMessage = async (messages, model) => {
 
 export const extractToolCalls = (responseText) => {
   const toolCalls = [];
+  const planRegex = /<plan>([\s\S]*?)<\/plan>/;
+  let plan = null;
+  const planMatch = responseText.match(planRegex);
+  if (planMatch) {
+    plan = planMatch[1].trim();
+    responseText = responseText.replace(planRegex, "");
+  }
   const regex = /<tool_call>([\s\S]*?)<\/tool_call>/g;
   let match;
   while ((match = regex.exec(responseText)) !== null) {
@@ -123,5 +128,5 @@ export const extractToolCalls = (responseText) => {
     }
   }
   const textOnlyResponse = responseText.replace(regex, "").trim();
-  return { toolCalls, textOnlyResponse };
+  return { toolCalls, plan, textOnlyResponse };
 };

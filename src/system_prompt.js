@@ -59,7 +59,7 @@ Core Directives:
 Available Tools:
 
 1.  Bash:
-    - Description: Executes a shell command in the project directory.
+    - Description: Executes a shell command in the project directory. **USE WINDOWS COMMANDS**
                  For commands that run indefinitely (e.g., starting a server like \`npm run dev\`, or watch scripts like \`tsc --watch\`), use the \`"background": true\` parameter.
                  Use with extreme caution as it can modify your system. **Make sure to use the background flag when running servers and such as waiting for them to end just stops your progress.**
     - Name: "Bash"

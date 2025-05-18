@@ -32,5 +32,10 @@
   "help": {
     "description": "Displays available commands and their descriptions.",
     "type": "client_side_handler"
+  },
+  "develop": {
+    "description": "Generate a plan and execute it step-by-step for the given task.",
+    "prompt_template": "Generate a plan for the task: '{{arg}}'. Use tools to explore the project structure and read necessary files for planning. Output the plan as an array of actionable string steps within <plan>[...]</plan> tags. Example: <plan>[\"Create auth/ directory\", \"Write JWT utils in auth/jwt_utils.py\"]</plan>.",
+    "arg_placeholder": "{{arg}}"
   }
 }
